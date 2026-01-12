@@ -37,15 +37,15 @@ class CoinstatsItem < ApplicationRecord
     DestroyJob.perform_later(self)
   end
 
-  # Fetches latest wallet data from CoinStats API and updates local records.
+  # Fetches latest wallet data from DeBank API and updates local records.
   # @raise [StandardError] if provider is not configured or import fails
   def import_latest_coinstats_data
-    provider = coinstats_provider
+    provider = debank_provider
     unless provider
-      Rails.logger.error "CoinstatsItem #{id} - Cannot import: CoinStats provider is not configured"
-      raise StandardError.new("CoinStats provider is not configured")
+      Rails.logger.error "CoinstatsItem #{id} - Cannot import: DeBank provider is not configured"
+      raise StandardError.new("DeBank provider is not configured")
     end
-    CoinstatsItem::Importer.new(self, coinstats_provider: provider).import
+    CoinstatsItem::Importer.new(self, debank_provider: provider).import
   rescue => e
     Rails.logger.error "CoinstatsItem #{id} - Failed to import data: #{e.message}"
     raise

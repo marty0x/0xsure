@@ -65,9 +65,9 @@ class CoinstatsItemsController < ApplicationController
   def link_wallet
     coinstats_item_id = params[:coinstats_item_id].presence
     @address = params[:address]&.to_s&.strip.presence
-    @blockchain = params[:blockchain]&.to_s&.strip.presence
+    @blockchain = params[:blockchain]&.to_s&.strip.presence || "ethereum" # Default for compatibility
 
-    unless coinstats_item_id && @address && @blockchain
+    unless coinstats_item_id && @address
       return render_link_wallet_error(t(".missing_params"))
     end
 
@@ -81,10 +81,10 @@ class CoinstatsItemsController < ApplicationController
       error_msg = result.errors.join("; ").presence || t(".failed")
       render_link_wallet_error(error_msg)
     end
-  rescue Provider::Coinstats::Error => e
+  rescue Provider::Debank::Error => e
     render_link_wallet_error(t(".error", message: e.message))
   rescue => e
-    Rails.logger.error("CoinStats link wallet error: #{e.class} - #{e.message}")
+    Rails.logger.error("DeBank link wallet error: #{e.class} - #{e.message}")
     render_link_wallet_error(t(".error", message: e.message))
   end
 
@@ -105,7 +105,10 @@ class CoinstatsItemsController < ApplicationController
     def validate_api_key(api_key)
       return true if api_key.blank?
 
-      response = Provider::Coinstats.new(api_key).get_blockchains
+      # DeBank API doesn't have a simple validation endpoint, so we'll try to fetch tokens for a test address
+      # Using a well-known address (Vitalik's address) for validation
+      test_address = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+      response = Provider::Debank.new(api_key).get_wallet_tokens(test_address)
       if response.success?
         true
       else
@@ -154,16 +157,16 @@ class CoinstatsItemsController < ApplicationController
     end
 
     def fetch_blockchain_options(coinstats_item)
-      return [] unless coinstats_item&.api_key.present?
-
-      Provider::Coinstats.new(coinstats_item.api_key).blockchain_options
-    rescue Provider::Coinstats::Error => e
-      Rails.logger.error("CoinStats blockchain fetch failed: item_id=#{coinstats_item.id} error=#{e.class} message=#{e.message}")
-      flash.now[:alert] = t("coinstats_items.new.blockchain_fetch_error")
-      []
-    rescue StandardError => e
-      Rails.logger.error("CoinStats blockchain fetch failed: item_id=#{coinstats_item.id} error=#{e.class} message=#{e.message}")
-      flash.now[:alert] = t("coinstats_items.new.blockchain_fetch_error")
-      []
+      # DeBank API doesn't have a blockchain list endpoint
+      # Return a default list of common blockchains for UI compatibility
+      [
+        ["Ethereum", "ethereum"],
+        ["Base", "base"],
+        ["Arbitrum", "arbitrum"],
+        ["Optimism", "optimism"],
+        ["Polygon", "polygon"],
+        ["Avalanche", "avalanche"],
+        ["BNB Chain", "bsc"]
+      ]
     end
 end

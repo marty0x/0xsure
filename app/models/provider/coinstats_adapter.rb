@@ -39,9 +39,9 @@ class Provider::CoinstatsAdapter < Provider::Base
     "coinstats"
   end
 
-  # Build a Coinstats provider instance with family-specific credentials
+  # Build a DeBank provider instance with family-specific credentials
   # @param family [Family] The family to get credentials for (required)
-  # @return [Provider::Coinstats, nil] Returns nil if credentials are not configured
+  # @return [Provider::Debank, nil] Returns nil if credentials are not configured
   def self.build_provider(family: nil)
     return nil unless family.present?
 
@@ -49,7 +49,7 @@ class Provider::CoinstatsAdapter < Provider::Base
     coinstats_item = family.coinstats_items.where.not(api_key: nil).first
     return nil unless coinstats_item&.credentials_configured?
 
-    Provider::Coinstats.new(coinstats_item.api_key)
+    Provider::Debank.new(coinstats_item.api_key)
   end
 
   # @return [String] URL path for triggering a sync

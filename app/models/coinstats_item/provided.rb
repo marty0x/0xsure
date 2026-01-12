@@ -1,9 +1,12 @@
 module CoinstatsItem::Provided
   extend ActiveSupport::Concern
 
-  def coinstats_provider
+  def debank_provider
     return nil unless credentials_configured?
 
-    Provider::Coinstats.new(api_key)
+    Provider::Debank.new(api_key)
   end
+
+  # Alias for backward compatibility during transition
+  alias_method :coinstats_provider, :debank_provider
 end
